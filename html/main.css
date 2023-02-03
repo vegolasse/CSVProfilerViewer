@@ -1,0 +1,71 @@
+body {
+    font-family: "Archivo Narrow", serif;
+}
+tr.positive {
+    background: #ffe0e0;
+}
+
+tr.negative {
+    background: #f8fff8;
+}
+
+table, th, td {
+    border: 1px solid;
+    padding: 0.0em 0.3em 0.0em 0.3em;
+    margin: 0em;
+    border-collapse: collapse;
+}
+
+th, h1 {
+    background: #404040;
+    color: #f8fff8;
+}
+
+h1 {
+    padding: 0.0em 0.0em 0.0em 0.5em;
+}
+th.ascending::before {
+    content: '↓ ';
+
+}
+
+th.nosort::before {
+    content: '↕ ';
+}
+
+th.descending::before {
+    content: '↑ ';
+}
+
+input.url-input {
+    width: 70%;
+}
+
+input.tabview { display: none; }
+input.tabview + label { display: inline-block }
+
+input.tabview ~ .tab { display: none }
+#tab1:checked ~ .tab.content1,
+#tab2:checked ~ .tab.content2,
+#tab3:checked ~ .tab.content3,
+#tab4:checked ~ .tab.content4,
+#tab5:checked ~ .tab.content5,
+#tab6:checked ~ .tab.content6,
+#tab7:checked ~ .tab.content7 { display: block; }
+
+input.tabview + label {
+    border: 1px solid #999;
+    background: #EEE;
+    padding: 4px 12px;
+    border-radius: 4px 4px 0 0;
+    position: relative;
+    top: 1px;
+}
+input.tabview:checked + label {
+    background: #FFF;
+    border-bottom: 1px solid transparent;
+}
+input.tabview ~ .tab {
+    border-top: 1px solid #999;
+    padding: 12px;
+}
