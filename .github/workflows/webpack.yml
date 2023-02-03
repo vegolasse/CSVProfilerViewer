@@ -30,6 +30,4 @@ jobs:
     - name: Archive production artifacts
       uses: actions/upload-pages-artifact@v1
       with:
-        name: all-dist
-        path: |
-            dist
+        path: dist
