@@ -1,6 +1,27 @@
-import fs, {Stats} from 'fs';
-import crypto from 'crypto'
-import axios, {AxiosResponse} from "axios";
+/*
+ * The MIT License (MIT)
+ *
+ * Copyright (c) 2023 Lars Sjodin, Hati Hati Games AB
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+*/
+
 import {parse, ParseResult} from "papaparse";
 import {Chart} from "chart.js/auto";
 import zoomPlugin from 'chartjs-plugin-zoom';
@@ -34,12 +55,7 @@ let tabs = [{
     suffix: ""
 }];
 let comparisons: PerformanceComparisonElement[] = []
-//let storage = window.localStorage;
-//let storedCsv = storage.getItem("csv")
 let lastCsv = "";
-//if (storedCsv && storedCsv.length) {
-//     lastCsv = storedCsv;
-//}
 let div = document.createElement("div");
 let urlInput = HTML.tag('input', {type:"file", class:"file-input", "id":"file-input"},"");
 let urlLabel = HTML.tag('label', {for:"file-input"}, "Input: ");
@@ -67,12 +83,8 @@ tabs.forEach( (config, index) => {
     comparisons.push(comparisonElement);
 })
 
-let exclusiveData={};
-
 async function run()
 {
-    //let response: AxiosResponse<string> = await axios.get(lastUrl);
-    //let csvString: string = response.data;
     let csvString : string = lastCsv;
     if (csvString.length>0) {
         let table: ParseResult<{ [key: string]: string }> = parse(csvString, {header:true});
@@ -138,47 +150,27 @@ async function run()
     }
 }
 
-
-customElements.define('performance-comparison', PerformanceComparisonElement);
-declare global {
-    interface HTMLElementTagNameMap {
-        'performance-comparison': PerformanceComparisonElement;
-    }
-}
-
 urlInput.addEventListener("change", (e) => {
     console.log("read")
 
         if (!e.target) {
             return;
         }
-        console.log("read")
-
-        // getting a hold of the file reference
         if (e.target instanceof HTMLInputElement && e.target.files)  {
-            console.log("read")
-
             var file = e.target.files[0];
-
-            // setting up the reader
             var reader = new FileReader();
             reader.readAsText(file,'UTF-8');
-
-            // here we tell the reader what to do when it's done reading...
             reader.onload = readerEvent => {
                 console.log("read")
                 if (readerEvent.target) {
-                    var content = readerEvent.target.result; // this is the content!
+                    var content = readerEvent.target.result;
                     if (!content) {
                         return;
                     }
                     if (content instanceof ArrayBuffer) {
-
+                        // Shouldn't be an ArrayBuffer
                     } else
                     {
-                        console.log(content);
-//                        let storage = window.localStorage;
-//                        storage.setItem("csv", content);
                         lastCsv =  content;
                         run().then()
 

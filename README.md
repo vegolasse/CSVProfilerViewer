@@ -1,4 +1,4 @@
-Runalyzer
+CSV Profiler Viewer
 ===
 
 This is a Single Page Application written in typescript to analyze output from Epic Unreal engine CSV files.
