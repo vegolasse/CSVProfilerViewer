@@ -27,7 +27,10 @@ import {Chart} from "chart.js/auto";
 import zoomPlugin from 'chartjs-plugin-zoom';
 import "./PerformanceComparisonElement";
 import {PerformanceComparisonElement} from "./PerformanceComparisonElement";
+import "./FramerateElement";
+import {FramerateElement} from "./FramerateElement";
 import {HTML} from "./HTML";
+import axios, {AxiosResponse} from "axios";
 
 let tabs = [{
     thread:"GameThread",
@@ -56,18 +59,20 @@ let tabs = [{
 }];
 let comparisons: PerformanceComparisonElement[] = []
 let lastCsv = "";
-let div = document.createElement("div");
+let mainChartElement = HTML.tag("div", {class:"frame-times-chart"}, "");
 let urlInput = HTML.tag('input', {type:"file", class:"file-input", "id":"file-input"},"");
 let urlLabel = HTML.tag('label', {for:"file-input"}, "Input: ");
 document.body.appendChild(urlLabel);
 document.body.appendChild(urlInput);
 
 let canvas = document.createElement("canvas");
-div.appendChild(canvas);
-div.style.width = "100%";
-div.style.height = "400px";
+mainChartElement.appendChild(canvas);
 Chart.register(zoomPlugin);
-document.body.appendChild(div);
+let framerateElement : FramerateElement = HTML.tag("frame-rate", {class:"frame-rate-chart"}, "");
+let topRowElement: HTMLDivElement = HTML.tag("div", {class:"top-row"},"");
+topRowElement.appendChild(mainChartElement);
+topRowElement.appendChild(framerateElement);
+document.body.appendChild(topRowElement);
 document.body.appendChild(HTML.tag("div", {}, "Click on one measurement in the graph and then another to compare them in the tabs below. Use scroll wheel to zoom."));
 tabs.forEach( (config, index) => {
     document.body.appendChild(HTML.tag("input", {class: "tabview", type:"radio", "checked": index==0?"true":null, name:"tabs", id:"tab"+(index+1)}, ""));
@@ -86,6 +91,23 @@ tabs.forEach( (config, index) => {
 async function run()
 {
     let csvString : string = lastCsv;
+
+    /**
+     * Used for rapid testing to not have to get a file every time.
+     */
+    /*
+    if (!csvString || csvString.length==0) {
+        try {
+            let response: AxiosResponse<string> = await axios.get("testdata.csv");
+            if (response.status >= 200 && response.status < 300) {
+                csvString = response.data;
+            }
+        } catch (e) {
+        }
+    }
+    */
+
+
     if (csvString.length>0) {
         let table: ParseResult<{ [key: string]: string }> = parse(csvString, {header:true});
         let frameTimeSeries : number[] = [];
@@ -99,7 +121,7 @@ async function run()
             frameNumberLabels.push(frameNumber);
         }
         comparisons.forEach(comparison => {comparison.setTable(table)})
-
+        framerateElement.setTable(table);
         new Chart(
             canvas,
             {
@@ -108,6 +130,9 @@ async function run()
                     maintainAspectRatio: false,
                     responsive: true,
                     plugins: {
+                        datalabels : {
+                            display: false,
+                        },
                         zoom: {
                             zoom: {
                                 wheel: {
@@ -117,6 +142,25 @@ async function run()
                                     enabled: true
                                 },
                                 mode: 'x',
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Frame #'
+                            }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'FrameTime (ms)'
+                            },
+                            ticks: {
+                                callback: function(value, index, ticks) {
+                                    return value + " ms";
+                                }
                             }
                         }
                     },

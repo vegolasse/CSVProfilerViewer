@@ -37,6 +37,18 @@ th.descending::before {
     content: '↑ ';
 }
 
+.top-row {
+    display: grid;
+    grid-template-columns: 70% 30%;
+    grid-gap: 10px;
+}
+
+
+.frame-rate-chart canvas, .frame-times-chart canvas{
+    height: 300px;
+}
+
+
 input.url-input {
     width: 70%;
 }

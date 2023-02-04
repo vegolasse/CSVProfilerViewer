@@ -34,8 +34,8 @@ export class PerformanceComparisonElement extends HTMLElement
 {
     labelRow: TSMap<string, number> = new TSMap();
     comparisonTable: {label:string, left : number, right: number, percentageDiff: number}[] = [];
-    sortColumn : 0|1|2|3 = 0;
-    sortOrder : 1|-1 = 1;
+    sortColumn : 0|1|2|3 = 2;
+    sortOrder : 1|-1 = -1;
     frameNumbers: number[] = [0,0];
     threadName = "";
     private table: ParseResult<{ [p: string]: string }> = {
