@@ -101,8 +101,9 @@ export class PerformanceComparisonElement extends HTMLElement
         this.table.meta.fields?.forEach((columnName : string )=> {
             if (columnName.match(new RegExp(`${this.threadName}/`))) {
                 let label = columnName;
-                let comparisonRowNumber : number = this.labelRow.computeIfAbsent(label, (key) => {
-                    this.comparisonTable.push({label:label.replace(new RegExp(`${this.threadName}/`), ".../"), left:0, right:0, percentageDiff:0});
+                let compactLabel = label.replace(new RegExp(`${this.threadName}/`), ".../");
+                let comparisonRowNumber : number = this.labelRow.computeIfAbsent(compactLabel, (key) => {
+                    this.comparisonTable.push({label:compactLabel, left:0, right:0, percentageDiff:0});
                     return this.comparisonTable.length-1;
                 });
                 let row: { label: string; left: number; right: number; percentageDiff: number } = this.comparisonTable[comparisonRowNumber];
@@ -131,6 +132,10 @@ export class PerformanceComparisonElement extends HTMLElement
             default:
                 const missingCase: never = this.sortColumn;
         }
+        this.labelRow = new TSMap();
+        this.comparisonTable.forEach((value,index) => {
+            this.labelRow.set(value.label, index);
+        })
         let table = HTML.tag("table", {}, "");
         let labelColumn: HTMLTableCellElement, leftColumn, rightColumn, diffColumn;
         let headerRow = HTML.tag("tr", {"align":"left"}, "",
