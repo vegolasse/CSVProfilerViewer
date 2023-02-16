@@ -29,6 +29,8 @@ import "./PerformanceComparisonElement";
 import {PerformanceComparisonElement} from "./PerformanceComparisonElement";
 import "./FramerateElement";
 import {FramerateElement} from "./FramerateElement";
+import "./MiniMapElement";
+import {MiniMapElement} from "./MiniMapElement";
 import {HTML} from "./HTML";
 import axios, {AxiosResponse} from "axios";
 
@@ -94,10 +96,20 @@ let topRowElement: HTMLDivElement = HTML.tag("div", {class:"top-row"},"");
 topRowElement.appendChild(mainChartElement);
 topRowElement.appendChild(framerateElement);
 document.body.appendChild(topRowElement);
+
 document.body.appendChild(HTML.tag("div", {}, "Click on one measurement in the graph and then another to compare them in the tabs below. Use scroll wheel to zoom."));
+
+
+let tabsDiv = HTML.tag("div", {}, "");
+let miniMap = HTML.tag("mini-map", {}, "");
+let bottomRowElement = HTML.tag("div", {class:"top-row"},"");
+topRowElement.appendChild(tabsDiv);
+topRowElement.appendChild(miniMap);
+document.body.appendChild(bottomRowElement);
+
 tabs.forEach( (config, index) => {
-    document.body.appendChild(HTML.tag("input", {class: "tabview", type:"radio", "checked": index==0?"true":null, name:"tabs", id:"tab"+(index+1)}, ""));
-    document.body.appendChild(HTML.tag("label",{class: "tabview", for:"tab"+(index+1)},config.label));
+    tabsDiv.appendChild(HTML.tag("input", {class: "tabview", type:"radio", "checked": index==0?"true":null, name:"tabs", id:"tab"+(index+1)}, ""));
+    tabsDiv.appendChild(HTML.tag("label",{class: "tabview", for:"tab"+(index+1)},config.label));
 });
 tabs.forEach( (config, index) => {
     let comparisonElement: PerformanceComparisonElement = HTML.tag('performance-comparison',{
@@ -105,7 +117,7 @@ tabs.forEach( (config, index) => {
         digits:config.digits,
         suffix:config.suffix,
         class:"tab content"+(index+1)},"");
-    document.body.appendChild(comparisonElement);
+    tabsDiv.appendChild(comparisonElement);
     comparisons.push(comparisonElement);
 })
 
@@ -153,6 +165,7 @@ async function run()
         }
         comparisons.forEach(comparison => {comparison.setTable(table)})
         framerateElement.setTable(table);
+        miniMap.setTable(table);
         new Chart(
             canvas,
             {

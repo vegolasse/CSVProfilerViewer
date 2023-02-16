@@ -27,10 +27,8 @@ import {HTML} from "./HTML";
 import {Chart} from "chart.js/auto";
 import 'chartjs-plugin-datalabels'
 import zoomPlugin from "chartjs-plugin-zoom";
-import ChartDataLabels from "chartjs-plugin-datalabels";
-Chart.register(ChartDataLabels);
 
-export class FramerateElement extends HTMLElement
+export class MiniMapElement extends HTMLElement
 {
     private table: ParseResult<{ [p: string]: string }> = {
         errors: [],
@@ -76,88 +74,77 @@ export class FramerateElement extends HTMLElement
         let canvas = HTML.tag('canvas', {}, "");
         this.appendChild(HTML.tag('div', {}, "", canvas));
         let table = this.table;
-        let frameRates: number[] = []
-        let totalFrameCount = 0;
+        let positions : { x:number, y:number} []= [];
+        let xMin = 1000000;
+        let xMax = -1000000;
+        let yMin = 1000000;
+        let yMax = -1000000;
         for (let frameNumber = 0; frameNumber<Math.min(2000,table.data.length); ++frameNumber) {
-            let frameTime = Number.parseFloat(table.data[frameNumber]["FrameTime"]);
-            frameRates.push(1000/frameTime);
-            totalFrameCount++;
-        }
-        let sortedFrameRates = frameRates.sort();
-        let percentile98 = sortedFrameRates[Math.floor(sortedFrameRates.length*0.98)];
-        let median = sortedFrameRates[Math.floor(sortedFrameRates.length*0.5)];
-        let percentile2 = sortedFrameRates[Math.floor(sortedFrameRates.length*0.02)];
-        let binSize = 1;
-
-        let bins: number[] = [];
-        let binLabels: string[] = [];
-
-        let firstBinValue = Math.floor(percentile2/binSize)*binSize-2;
-        let lastBinValue: number = Math.floor(percentile98/binSize)*binSize+2;
-        for (let frameRate = firstBinValue; frameRate< lastBinValue; frameRate+=binSize) {
-            bins.push(0.0)
-            binLabels.push(frameRate.toString());
-        }
-        binLabels[0] = "≤ "+binLabels[0]
-        binLabels[binLabels.length-1] = "≥ "+binLabels[binLabels.length-1]
-        for (let frameNumber = 0; frameNumber<Math.min(2000,table.data.length); ++frameNumber) {
-            let frameTime = Number.parseFloat(table.data[frameNumber]["FrameTime"]);
-            let frameRate = 1000/frameTime;
-            let binIndex: number = Math.floor((frameRate-firstBinValue)/binSize)*binSize;
-            binIndex = Math.max(0,binIndex);
-            binIndex = Math.min(bins.length-1, binIndex);
-            bins[binIndex] += 100/totalFrameCount;
+            let x = Number.parseFloat(table.data[frameNumber]["View/PosX"]);
+            let y = Number.parseFloat(table.data[frameNumber]["View/PosY"]);
+            if (!isNaN(x) && !isNaN(y)) {
+                xMin = Math.min(x,xMin);
+                xMax = Math.max(x,xMax);
+                yMin = Math.min(y,yMin);
+                yMax = Math.max(y,yMax);
+                positions.push({x,y});
+            }
         }
 
-        new Chart(
+        console.log("min "+xMin);
+        console.log(xMax);
+        let maxSpan = Math.max(xMax-xMin, yMax-yMin)*1.2;
+        let xMiddle = (xMax+xMin)/2
+        let yMiddle = (yMax+yMin)/2
+        xMin = xMiddle-maxSpan/2;
+        xMax = xMiddle+maxSpan/2;
+        yMax = yMiddle+maxSpan/2;
+        yMin = yMiddle-maxSpan/2;
+
+        let chart = new Chart(
             canvas,
             {
                 options: {
+
+                    aspectRatio: 0.75,
+
                     animation: false,
                     maintainAspectRatio: false,
                     responsive: true,
                     plugins: {
                         datalabels : {
-                            anchor : "end",
-                            align: "end",
-                            padding: 0,
-                            offset: -1,
-                            font: {
-                              size: 9
-                            },
-                            formatter: value => {
-                                return value.toFixed(1);
-                            }
-                        }
+                            display: false,
+                        },
                     },
                     scales: {
                         x: {
-                            title: {
-                                display: true,
-                                text: 'Framerate (1000/FrameTime)'
+                            min:xMin,
+                            max:xMax,
+                            ticks: {
+                                callback: function(value, index, ticks) {
+                                    return parseFloat(""+value).toFixed(0) + " ";
+                                }
                             }
                         },
                         y: {
-                            title: {
-                                display: true,
-                                text: 'Percent of frames'
-                            },
+                            min:yMin,
+                            max:yMax,
                             ticks: {
                                 callback: function(value, index, ticks) {
-                                    return value + " %";
+                                    return parseFloat(""+value).toFixed(0) + " ";
                                 }
                             }
                         }
                     },
 
                 },
-                type: 'bar',
+                type: 'scatter',
                 data: {
-                    labels: binLabels,
                     datasets: [
                         {
-                            label: 'Framerate',
-                            data: bins
+                            showLine: true,
+                            label: 'Player Position',
+                            data: positions
                         },
                     ]
                 }
@@ -167,9 +154,9 @@ export class FramerateElement extends HTMLElement
     }
 }
 
-window.customElements.define('frame-rate', FramerateElement);
+window.customElements.define('mini-map', MiniMapElement);
 declare global {
     interface HTMLElementTagNameMap {
-        'frame-rate': FramerateElement;
+        'mini-map': MiniMapElement;
     }
 }
