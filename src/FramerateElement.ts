@@ -109,7 +109,6 @@ export class FramerateElement extends HTMLElement
             bins[binIndex] += 100/totalFrameCount;
         }
 
-        console.log(bins);
         new Chart(
             canvas,
             {

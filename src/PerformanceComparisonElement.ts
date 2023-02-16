@@ -92,22 +92,21 @@ export class PerformanceComparisonElement extends HTMLElement
     addComparison(frameNumber: number): void {
         this.frameNumbers = [this.frameNumbers[1]];
         this.frameNumbers.push(frameNumber);
-        console.log("click");
         this.comparisonTable.forEach(row => {
             row.left = row.right;
             row.right = 0.0;
             row.percentageDiff = 0.0;
         })
         this.table.meta.fields?.forEach((columnName : string )=> {
-            if (columnName.match(new RegExp(`${this.threadName}/`))) {
+            if (columnName.match(new RegExp(`${this.threadName}`))) {
                 let label = columnName;
-                let compactLabel = label.replace(new RegExp(`${this.threadName}/`), ".../");
+                let compactLabel = label.replace(new RegExp(`${this.threadName}`), ".../");
                 let comparisonRowNumber : number = this.labelRow.computeIfAbsent(compactLabel, (key) => {
                     this.comparisonTable.push({label:compactLabel, left:0, right:0, percentageDiff:0});
                     return this.comparisonTable.length-1;
                 });
                 let row: { label: string; left: number; right: number; percentageDiff: number } = this.comparisonTable[comparisonRowNumber];
-                row.right = Number.parseFloat(this.table.data[frameNumber][columnName]);
+                row.right += Number.parseFloat(this.table.data[frameNumber][columnName]);
                 row.percentageDiff = 100*(row.right/row.left)-100;
             }
         });

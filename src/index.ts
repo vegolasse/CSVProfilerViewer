@@ -33,27 +33,43 @@ import {HTML} from "./HTML";
 import axios, {AxiosResponse} from "axios";
 
 let tabs = [{
-    thread:"GameThread",
+    thread:"GameThread/",
+    label: "GameThread",
     digits:3,
     suffix: " ms"
 }, {
-    thread:"RenderThread",
+    thread:"RenderThread/",
+    label: "RenderThread",
     digits:3,
     suffix: " ms"
 }, {
-    thread:"ActorCount",
+    thread:"/.*Worker.*/",
+    label: "Physics",
+    digits:3,
+    suffix: " ms"
+},{
+    thread:"FileIO/",
+    label: "FileIO",
+    digits:1,
+    suffix: ""
+}, {
+    thread:"ActorCount/",
+    label: "ActorCount",
     digits:0,
     suffix: ""
 }, {
-    thread:"Ticks",
+    thread:"Ticks/",
+    label: "Ticks",
     digits:0,
     suffix: ""
 }, {
-    thread:"DrawCall",
+    thread:"DrawCall/",
+    label: "DrawCall",
     digits:0,
     suffix: ""
 }, {
-    thread:"View",
+    thread:"View/",
+    label: "View",
     digits:1,
     suffix: ""
 }];
@@ -76,7 +92,7 @@ document.body.appendChild(topRowElement);
 document.body.appendChild(HTML.tag("div", {}, "Click on one measurement in the graph and then another to compare them in the tabs below. Use scroll wheel to zoom."));
 tabs.forEach( (config, index) => {
     document.body.appendChild(HTML.tag("input", {class: "tabview", type:"radio", "checked": index==0?"true":null, name:"tabs", id:"tab"+(index+1)}, ""));
-    document.body.appendChild(HTML.tag("label",{class: "tabview", for:"tab"+(index+1)},config.thread));
+    document.body.appendChild(HTML.tag("label",{class: "tabview", for:"tab"+(index+1)},config.label));
 });
 tabs.forEach( (config, index) => {
     let comparisonElement: PerformanceComparisonElement = HTML.tag('performance-comparison',{
@@ -95,7 +111,7 @@ async function run()
     /**
      * Used for rapid testing to not have to get a file every time.
      */
-    /*
+/*
     if (!csvString || csvString.length==0) {
         try {
             let response: AxiosResponse<string> = await axios.get("testdata.csv");
@@ -105,19 +121,29 @@ async function run()
         } catch (e) {
         }
     }
-    */
+*/
 
 
     if (csvString.length>0) {
         let table: ParseResult<{ [key: string]: string }> = parse(csvString, {header:true});
         let frameTimeSeries : number[] = [];
         let gameThreadTimeSeries : number[] = [];
+        let chaosTimeSeries : number[] = [];
+        let perFrameKBTimeSeries : number[] = [];
         let renderThreadTimeSeries : number[] = [];
         let frameNumberLabels : number[] = [];
         for (let frameNumber = 0; frameNumber<Math.min(2000,table.data.length); ++frameNumber) {
             frameTimeSeries.push(Number.parseFloat(table.data[frameNumber]["FrameTime"]));
             gameThreadTimeSeries.push(Number.parseFloat(table.data[frameNumber]["GameThreadTime"]));
             renderThreadTimeSeries.push(Number.parseFloat(table.data[frameNumber]["RenderThreadTime"]));
+            perFrameKBTimeSeries.push(Number.parseFloat(table.data[frameNumber]["FileIO/PerFrameKB"]));
+            let chaosTime : number = 0;
+            table.meta.fields?.forEach((columnLabel) => {
+                if (columnLabel.match(/Chaos.*Worker.*/) || columnLabel.match(/Exclusive.*Physics/)) {
+                    chaosTime += Number.parseFloat(table.data[frameNumber][columnLabel]);
+                }
+            });
+            chaosTimeSeries.push(chaosTime);
             frameNumberLabels.push(frameNumber);
         }
         comparisons.forEach(comparison => {comparison.setTable(table)})
@@ -162,6 +188,21 @@ async function run()
                                     return value + " ms";
                                 }
                             }
+                        },
+                        kb: {
+                            type: 'linear',
+                             grid: { display: false },
+
+                            position: 'right',
+                            title: {
+                                display: true,
+                                text: 'Loaded (KB)'
+                            },
+                            ticks: {
+                                callback: function(value, index, ticks) {
+                                    return value + " KB";
+                                }
+                            }
                         }
                     },
                     onClick: (event, elements, chart) => {
@@ -186,6 +227,17 @@ async function run()
                         {
                             label: 'Render Thread (ms)',
                             data: renderThreadTimeSeries
+                        },
+                        {
+                            label: 'Physics+Chaos, All threads total (ms)',
+                            data: chaosTimeSeries
+                        },
+                        {
+                            type: 'bar',
+                            barPercentage: 1.3,
+                            yAxisID: 'kb', // <-- the Y axis to use for this data set
+                            label: 'Per frame loaded (KB)',
+                            data: perFrameKBTimeSeries
                         }
                     ]
                 }
@@ -195,7 +247,6 @@ async function run()
 }
 
 urlInput.addEventListener("change", (e) => {
-    console.log("read")
 
         if (!e.target) {
             return;
@@ -205,7 +256,6 @@ urlInput.addEventListener("change", (e) => {
             var reader = new FileReader();
             reader.readAsText(file,'UTF-8');
             reader.onload = readerEvent => {
-                console.log("read")
                 if (readerEvent.target) {
                     var content = readerEvent.target.result;
                     if (!content) {
