@@ -63,7 +63,8 @@ input.tabview ~ .tab { display: none }
 #tab4:checked ~ .tab.content4,
 #tab5:checked ~ .tab.content5,
 #tab6:checked ~ .tab.content6,
-#tab7:checked ~ .tab.content7 { display: block; }
+#tab7:checked ~ .tab.content7,
+#tab8:checked ~ .tab.content8 { display: block; }
 
 input.tabview + label {
     border: 1px solid #999;
