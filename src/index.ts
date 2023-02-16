@@ -116,7 +116,7 @@ async function run()
     /**
      * Used for rapid testing to not have to get a file every time.
      */
-
+/*
     if (!csvString || csvString.length==0) {
         try {
             let response: AxiosResponse<string> = await axios.get("testdata.csv");
@@ -126,7 +126,7 @@ async function run()
         } catch (e) {
         }
     }
-
+*/
 
 
     if (csvString.length>0) {
