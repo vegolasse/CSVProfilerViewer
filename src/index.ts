@@ -27,12 +27,15 @@ import {Chart} from "chart.js/auto";
 import zoomPlugin from 'chartjs-plugin-zoom';
 import "./PerformanceComparisonElement";
 import {PerformanceComparisonElement} from "./PerformanceComparisonElement";
-import "./FramerateElement";
-import {FramerateElement} from "./FramerateElement";
+import "./FrameTimeElement";
+import {FrameTimeElement} from "./FrameTimeElement";
 import "./MiniMapElement";
 import {MiniMapElement} from "./MiniMapElement";
 import {HTML} from "./HTML";
 import axios, {AxiosResponse} from "axios";
+
+const  MAX_FRAMES_TO_PROCESS: number = 60 * 3600;
+
 
 let tabs = [{
     thread:"GameThread/",
@@ -91,10 +94,10 @@ document.body.appendChild(urlInput);
 let canvas = document.createElement("canvas");
 mainChartElement.appendChild(canvas);
 Chart.register(zoomPlugin);
-let framerateElement : FramerateElement = HTML.tag("frame-rate", {class:"frame-rate-chart"}, "");
+let frametimeElement : FrameTimeElement = HTML.tag("frame-time", {class:"frame-time-chart"}, "");
 let topRowElement: HTMLDivElement = HTML.tag("div", {class:"top-row"},"");
 topRowElement.appendChild(mainChartElement);
-topRowElement.appendChild(framerateElement);
+topRowElement.appendChild(frametimeElement);
 document.body.appendChild(topRowElement);
 
 document.body.appendChild(HTML.tag("div", {}, "Click on one measurement in the graph and then another to compare them in the tabs below. Use scroll wheel to zoom."));
@@ -124,22 +127,17 @@ tabs.forEach( (config, index) => {
 async function run()
 {
     let csvString : string = lastCsv;
-
-    /**
-     * Used for rapid testing to not have to get a file every time.
-     */
-/*
-    if (!csvString || csvString.length==0) {
+    // Useful test url when running locally is http://localhost:4000/?csv=testdata.csv
+    let csvQueryParam = new URLSearchParams(window.location.search).get("csv");
+    if (csvQueryParam) {
         try {
-            let response: AxiosResponse<string> = await axios.get("testdata.csv");
+            let response: AxiosResponse<string> = await axios.get(csvQueryParam);
             if (response.status >= 200 && response.status < 300) {
                 csvString = response.data;
             }
         } catch (e) {
         }
     }
-*/
-
 
     if (csvString.length>0) {
         let table: ParseResult<{ [key: string]: string }> = parse(csvString, {header:true});
@@ -149,7 +147,7 @@ async function run()
         let perFrameKBTimeSeries : number[] = [];
         let renderThreadTimeSeries : number[] = [];
         let frameNumberLabels : number[] = [];
-        for (let frameNumber = 0; frameNumber<Math.min(2000,table.data.length); ++frameNumber) {
+        for (let frameNumber = 0; frameNumber<Math.min(MAX_FRAMES_TO_PROCESS,table.data.length); ++frameNumber) {
             frameTimeSeries.push(Number.parseFloat(table.data[frameNumber]["FrameTime"]));
             gameThreadTimeSeries.push(Number.parseFloat(table.data[frameNumber]["GameThreadTime"]));
             renderThreadTimeSeries.push(Number.parseFloat(table.data[frameNumber]["RenderThreadTime"]));
@@ -164,7 +162,7 @@ async function run()
             frameNumberLabels.push(frameNumber);
         }
         comparisons.forEach(comparison => {comparison.setTable(table)})
-        framerateElement.setTable(table);
+        frametimeElement.setTable(table);
         miniMap.setTable(table);
         new Chart(
             canvas,
