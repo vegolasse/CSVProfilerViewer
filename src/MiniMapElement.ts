@@ -136,7 +136,7 @@ export class MiniMapElement extends HTMLElement {
                 frameTimes.push(frameTime);
             }
         }
-        let sortedFrameTimes: number[] = frameTimes.sort();
+        let sortedFrameTimes: number[] = frameTimes.sort((a,b) => a-b);
         let medianFrameTime = sortedFrameTimes[Math.floor(frameTimes.length / 2)];
         let percentile2 = sortedFrameTimes[Math.floor(frameTimes.length * 0.02)];
         let percintile98 = sortedFrameTimes[Math.floor(frameTimes.length * 0.98)];

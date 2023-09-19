@@ -85,7 +85,7 @@ export class FrameTimeElement extends HTMLElement
             frameTimes.push(frameTime);
             totalFrameCount++;
         }
-        let sortedFrameRates = frameTimes.sort();
+        let sortedFrameRates = frameTimes.sort((a,b) => (a-b));
         let percentile98 = sortedFrameRates[Math.floor(sortedFrameRates.length*0.98)];
         let median = sortedFrameRates[Math.floor(sortedFrameRates.length*0.5)];
         let percentile2 = sortedFrameRates[Math.floor(sortedFrameRates.length*0.02)];
