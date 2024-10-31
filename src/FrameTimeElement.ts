@@ -80,10 +80,17 @@ export class FrameTimeElement extends HTMLElement
         let table = this.table;
         let frameTimes: number[] = []
         let totalFrameCount = 0;
+        let totalTime = 0;
         for (let frameNumber = 0; frameNumber<Math.min(this.MAX_FRAMES_TO_PROCESS,table.data.length); ++frameNumber) {
             let frameTime = Number.parseFloat(table.data[frameNumber]["FrameTime"]);
-            frameTimes.push(frameTime);
-            totalFrameCount++;
+            if (Number.isFinite(frameTime)) {
+
+                frameTimes.push(frameTime);
+                totalFrameCount++;
+                if (Number.isFinite(frameTime)) {
+                    totalTime += frameTime;
+                }
+            }
         }
         let sortedFrameRates = frameTimes.sort((a,b) => (a-b));
         let percentile98 = sortedFrameRates[Math.floor(sortedFrameRates.length*0.98)];
@@ -92,20 +99,23 @@ export class FrameTimeElement extends HTMLElement
         let binSize = 0;
 
         let bins: number[] = [];
+        let timeBins: number[] = [];
         let binLabels: string[] = [];
         let firstBinValue;
 
         do {
             binSize++;
             bins = [];
+            timeBins = [];
             binLabels=[];
             firstBinValue = Math.floor(percentile2/binSize)*binSize-2;
             let lastBinValue: number = Math.floor(percentile98/binSize)*binSize+2;
             for (let frameRate = firstBinValue; frameRate< lastBinValue; frameRate+=binSize) {
                 bins.push(0.0)
+                timeBins.push(0.0)
                 binLabels.push(frameRate.toString());
             }
-        } while (bins.length>15)
+        } while (bins.length>20)
 
         binLabels[0] = "≤ "+binLabels[0]
         binLabels[binLabels.length-1] = "≥ "+binLabels[binLabels.length-1]
@@ -115,6 +125,13 @@ export class FrameTimeElement extends HTMLElement
             binIndex = Math.max(0,binIndex);
             binIndex = Math.min(bins.length-1, binIndex);
             bins[binIndex] += 100/totalFrameCount;
+            if (Number.isFinite(frameTime)) {
+                timeBins[binIndex] += 100 * frameTime / totalTime;
+            }
+        }
+        for (let i = 1; i<bins.length; ++i) {
+            bins[i] += bins [i-1];
+            timeBins[i] += timeBins [i-1];
         }
 
         new Chart(
@@ -135,7 +152,7 @@ export class FrameTimeElement extends HTMLElement
                               size: 9
                             },
                             formatter: value => {
-                                return value.toFixed(1);
+                                return value.toFixed(0);
                             }
                         }
                     },
@@ -166,7 +183,13 @@ export class FrameTimeElement extends HTMLElement
                     datasets: [
                         {
                             label: 'FrameTime (ms)',
-                            data: bins
+                            data: bins,
+                            backgroundColor: "lightgray"
+                        },
+                        {
+                            label: '"True" Frametime (ms)',
+                            data: timeBins,
+                            backgroundColor: "blue"
                         },
                     ]
                 }

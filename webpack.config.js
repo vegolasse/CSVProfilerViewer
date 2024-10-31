@@ -8,10 +8,17 @@ module.exports = {
         new CopyPlugin({
             patterns: [
                 {
-                    from: path.resolve(__dirname, "html", "**/*"),
+                    from: path.resolve(__dirname, "html", "index.html"),
+                    context: path.resolve(__dirname, "html"),
+                },
+                {
+                    from: path.resolve(__dirname, "html", "main.css"),
+                    context: path.resolve(__dirname, "html"),
+                },
+                {
+                    from: path.resolve(__dirname, "html", "testdata.csv"),
                     context: path.resolve(__dirname, "html"),
                 }
-
             ],
         })
     ],
